@@ -1,9 +1,6 @@
 package censys
 
 import (
-    "net/http"
-    "io/ioutil"
-    "strings"
     "encoding/json"
 
     "fmt"
@@ -17,7 +14,7 @@ type Querys struct {
     Flatten bool `json:flatten, omitempty`
 }
 
-func build_body_json(query string) string {
+func Build_body_json(query string) string {
     var data Querys
     data.Query = query
     data.Flatten = true
@@ -33,42 +30,23 @@ func build_body_json(query string) string {
 
 
 func Search (subjectKeyId string) []byte {
-    client := &http.Client{}
-/*
-    bodyData := map[string]string{
-        "query": "www.json.cn",
-    }
-*/
-   query_sql := "parsed.extensions.authority_key_id: " + subjectKeyId + " and tags: trusted"
-    bodyData := build_body_json(query_sql)
+    query_sql := "parsed.extensions.authority_key_id: " +
+                 subjectKeyId + " and tags: trusted"
+    bodyData := Build_body_json(query_sql)
     if bodyData == "" {
         return nil
     }
+
     fmt.Println("json: ", bodyData)
-    body := strings.NewReader(bodyData)
 
-    req, err := http.NewRequest("POST", apiUrl + "/search/certificates", body)
-    if err != nil {
-        fmt.Println(err)
-        return nil
+    reqoption := ReqOptions{
+        method : "POST",
+        suburl : "/search/certificates",
+        bodyFlag : true,
+        body : bodyData,
     }
 
-    req.SetBasicAuth(uId, secret)
-
-    resp, err := client.Do(req)
-    if err != nil {
-        fmt.Println(err)
-        return nil
-    }
-    defer resp.Body.Close()
-
-    fmt.Println(resp.Status)
-
-    respBody, err := ioutil.ReadAll(resp.Body)
-    if err != nil {
-        fmt.Println(err)
-        return nil
-    }
+    respBody := Request(reqoption)
 
     fmt.Println(string(respBody))
 

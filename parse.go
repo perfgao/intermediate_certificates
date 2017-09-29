@@ -53,7 +53,7 @@ func ParseRoot() string {
     return sha256
 }
 
-type IMetadatas struct {
+type Metadatas struct {
     Count int `json:"count"`
     Query string `json:"query"`
     BackendTime int `json:"backend_time"`
@@ -61,20 +61,20 @@ type IMetadatas struct {
     Pages int `json:"pages"`
 }
 
-type IParseds struct {
+type Parseds struct {
     Sha256 string `json:"parsed.fingerprint_sha256"`
     SubjectDN string `json:"parsed.subject_dn"`
     IssuerDN string `json:"parsed.issuer_dn"`
 }
 
-type Intermediate struct {
+type QueryList struct {
     Status string `json:"status"`
-    Metadata IMetadatas `json:"metadata"`
-    Results []IParseds `json:"results"`
+    Metadata Metadatas `json:"metadata"`
+    Results []Parseds `json:"results"`
 }
 
 func ParseIntermediate(data []byte) {
-    var intermediate Intermediate
+    var intermediate QueryList
     json.Unmarshal(data, &intermediate)
 
     fmt.Println(intermediate.Status, intermediate.Metadata.Count)
@@ -92,9 +92,28 @@ func ParseIntermediate(data []byte) {
     for _, parsed := range intermediate.Results {
         fmt.Println(parsed.Sha256)
         respBody := View(parsed.Sha256)
-        BuildInterCertName(respBody)
+        BuildCertName(respBody)
+    }
+}
+
+func ParseRootQuery(data []byte) {
+    var root QueryList
+    json.Unmarshal(data, &root)
+
+    if root.Status != "ok" {
+        fmt.Println("failed")
+        return
     }
 
+    if root.Metadata.Count <= 0 {
+        fmt.Println("get result count <= 0")
+        return
+    }
+
+    for _, parsed := range root.Results {
+        fmt.Println(parsed.Sha256)
+        GetRootCert(parsed.Sha256)
+    }
 }
 
 type ICSubjects struct {
@@ -114,21 +133,30 @@ type ICAudits struct {
     Ccadb ICCcadb `json:"ccadb"`
 }
 
-type IntermediateCert struct {
+//type IntermediateCert struct {
+type CertDetails struct {
     Parsed ICParseds `json:"parsed"`
     Audit  ICAudits `json:"audit"`
+    Raw string `json:"raw"`
 }
 
-func BuildInterCertName(data []byte) {
-    var interCert IntermediateCert
-    json.Unmarshal(data, &interCert)
+func BuildCertName(data []byte) {
+    var certdetail CertDetails
+    json.Unmarshal(data, &certdetail)
 
-    fmt.Println(interCert.Audit.Ccadb.CertName, interCert.Parsed.Sha256)
+    fmt.Println(certdetail.Audit.Ccadb.CertName, certdetail.Parsed.Sha256)
 
-    cn := interCert.Audit.Ccadb.CertName
+    cn := certdetail.Audit.Ccadb.CertName
     if cn == "" {
-        cn = interCert.Parsed.Subject.CN[0]
+        cn = certdetail.Parsed.Subject.CN[0]
     }
 
-    WritePEMFile(data, "./intermediate/" + cn + "_" + interCert.Parsed.Sha256)
+    WritePEMFile(data, "./intermediate/" + cn + "_" + certdetail.Parsed.Sha256)
+}
+
+func ParseCertDetail(data []byte) CertDetails {
+    var certdetail CertDetails
+    json.Unmarshal(data, &certdetail)
+
+    return certdetail
 }
