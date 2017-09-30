@@ -2,10 +2,31 @@ package censys
 
 import (
     "fmt"
+    "time"
+    "encoding/json"
 )
 
+type RootCert struct {
+}
 
-func GetAllRoot() []byte {
+func (root *RootCert) Query(query_data string) []byte {
+    return Request(ReqOptions{
+        method : "POST",
+        suburl : "/search/certificates",
+        bodyFlag : true,
+        body : query_data,
+    })
+}
+
+func (root *RootCert) View(sha256 string) []byte {
+    return Request(ReqOptions{
+        method : "GET",
+        suburl : "/view/certificates/" + sha256,
+        bodyFlag : false,
+    })
+}
+
+func (root *RootCert)GetAllRoot() []byte {
     query_sql := "tags: root"
     query_data := Build_body_json(query_sql)
     if query_data == "" {
@@ -14,32 +35,45 @@ func GetAllRoot() []byte {
     }
 
     fmt.Println("Query: ", query_data)
-
-    reqoption := ReqOptions{
-        method : "POST",
-        suburl : "/search/certificates",
-        bodyFlag : true,
-        body : query_data,
-    }
-
-    return Request(reqoption)
+    return root.Query(query_data)
 }
 
-func GetRootCert(sha256 string) {
-    if sha256 == "" {
+func (root *RootCert)ParseRootQuery(data []byte) {
+    var list QueryList
+    json.Unmarshal(data, &list)
+
+    if list.Status != "ok" {
+        fmt.Println("failed")
         return
     }
 
-    reqoption := ReqOptions{
-        method : "GET",
-        suburl : "/view/certificates/" + sha256,
-        bodyFlag : false,
+    if list.Metadata.Count <= 0 {
+        fmt.Println("get result count <= 0")
+        return
     }
 
-    result := Request(reqoption)
+    var children ChildrenCert
+    for _, parsed := range list.Results {
+        certdetail := root.GetRootCert(parsed.Sha256)
+        time.Sleep(1 * time.Second)
+        children.GetAllChildren(certdetail)
+    }
+}
+
+func (root *RootCert)GetRootCert(sha256 string) *CertDetails {
+    if sha256 == "" {
+        return nil
+    }
+
+    result := root.View(sha256)
 
     certdetail := ParseCertDetail(result)
 
-    cert := AdjustPemFormat(certdetail.Raw)
-    fmt.Println(string(cert))
+    //AdjustPemFormat(certdetail.Raw)
+    //fmt.Println(string(cert))
+
+    name := BuildCertName(certdetail)
+    WritePEMFile(certdetail, "./root/" + name)
+
+    return &certdetail
 }

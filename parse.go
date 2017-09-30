@@ -3,7 +3,6 @@ package censys
 import (
     "fmt"
     "log"
-    "io/ioutil"
     "encoding/json"
     "encoding/pem"
     "crypto/x509"
@@ -12,15 +11,6 @@ import (
 )
 
 
-func LoadPEM(path string) []byte {
-    contnet, err := ioutil.ReadFile(path)
-    if err != nil {
-        fmt.Println(err)
-        log.Fatal(err)
-    }
-
-    return contnet
-}
 
 func ParseCert(sslContent []byte) *x509.Certificate {
     pemBlock, _ := pem.Decode(sslContent)
@@ -45,7 +35,7 @@ func Sha256Fingerprint(data []byte) CertificateFingerprint {
 }
 
 func ParseRoot() string {
-    contnet := LoadPEM("/root/go/src/perfgao/censys_io/bin/root/1.pem")
+    contnet := loadPEM("/root/go/src/perfgao/censys_io/bin/root/1.pem")
     cert := ParseCert(contnet)
 
     sha256 := GetSha256(cert)
@@ -73,7 +63,7 @@ type QueryList struct {
     Results []Parseds `json:"results"`
 }
 
-func ParseIntermediate(data []byte) {
+func ParseIntermediate(data []byte) *QueryList {
     var intermediate QueryList
     json.Unmarshal(data, &intermediate)
 
@@ -81,77 +71,56 @@ func ParseIntermediate(data []byte) {
 
     if intermediate.Status != "ok" {
         fmt.Println("failed")
-        return
+        return nil
     }
 
     if intermediate.Metadata.Count <= 0 {
         fmt.Println("get result count <= 0")
-        return
+        return nil
     }
 
-    for _, parsed := range intermediate.Results {
-        fmt.Println(parsed.Sha256)
-        respBody := View(parsed.Sha256)
-        BuildCertName(respBody)
-    }
+    return &intermediate
 }
 
-func ParseRootQuery(data []byte) {
-    var root QueryList
-    json.Unmarshal(data, &root)
 
-    if root.Status != "ok" {
-        fmt.Println("failed")
-        return
-    }
+/**********************************************************/
 
-    if root.Metadata.Count <= 0 {
-        fmt.Println("get result count <= 0")
-        return
-    }
-
-    for _, parsed := range root.Results {
-        fmt.Println(parsed.Sha256)
-        GetRootCert(parsed.Sha256)
-    }
-}
-
-type ICSubjects struct {
+type CDSubjects struct {
     CN []string `json:"common_name"`
 }
 
-type ICParseds struct {
-    Sha256 string `json:"fingerprint_sha256"`
-    Subject ICSubjects `json:"subject"`
+type CDExtensions struct {
+    SubjectKeyId string `json:"subject_key_id"`
 }
 
-type ICCcadb struct {
+type CDParseds struct {
+    Sha256 string `json:"fingerprint_sha256"`
+    Subject CDSubjects `json:"subject"`
+    Extension CDExtensions `json:"extensions"`
+}
+
+type CDCcadb struct {
     CertName string `json:"certificate_name"`
 }
 
-type ICAudits struct {
-    Ccadb ICCcadb `json:"ccadb"`
+type CDAudits struct {
+    Ccadb CDCcadb `json:"ccadb"`
 }
 
-//type IntermediateCert struct {
 type CertDetails struct {
-    Parsed ICParseds `json:"parsed"`
-    Audit  ICAudits `json:"audit"`
+    Parsed CDParseds `json:"parsed"`
+    Audit  CDAudits `json:"audit"`
     Raw string `json:"raw"`
 }
 
-func BuildCertName(data []byte) {
-    var certdetail CertDetails
-    json.Unmarshal(data, &certdetail)
-
-    fmt.Println(certdetail.Audit.Ccadb.CertName, certdetail.Parsed.Sha256)
-
+func BuildCertName(certdetail CertDetails) string {
     cn := certdetail.Audit.Ccadb.CertName
     if cn == "" {
         cn = certdetail.Parsed.Subject.CN[0]
     }
 
-    WritePEMFile(data, "./intermediate/" + cn + "_" + certdetail.Parsed.Sha256)
+    return cn + "_" + certdetail.Parsed.Sha256
+    //WritePEMFile(data, "./intermediate/" + cn + "_" + certdetail.Parsed.Sha256)
 }
 
 func ParseCertDetail(data []byte) CertDetails {

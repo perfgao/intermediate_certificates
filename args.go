@@ -1,9 +1,11 @@
 package censys
 
 import (
+    "fmt"
     "bytes"
     "sort"
     "net/url"
+    "encoding/json"
 )
 
 type Value map[string][]string
@@ -48,4 +50,27 @@ func build_body_args (body map[string]string) string {
     }
 
     return data.Encode()
+}
+
+/***************************************************/
+
+type Querys struct {
+    Query string `json:"query"`
+    Page int `json:"page, omitempty"`
+    //Fields []string `json:"fields"`
+    Flatten bool `json:flatten, omitempty`
+}
+
+func Build_body_json(query string) string {
+    var data Querys
+    data.Query = query
+    data.Flatten = true
+    data.Page = 1
+
+    d, err := json.Marshal(data)
+    if err != nil {
+        fmt.Println(err)
+        return ""
+    }
+    return string(d)
 }

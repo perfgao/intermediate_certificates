@@ -1,23 +1,17 @@
 package censys
 
 import (
-    "encoding/json"
     "fmt"
+    "log"
     "os"
     "io"
+    "io/ioutil"
     "strings"
 )
 
-type AllData struct {
-    Raw string `json:"raw"`
-}
 
-func WritePEMFile(data []byte, filename string) {
-    var alldata AllData
+func WritePEMFile(cert CertDetails, filename string) {
 
-    json.Unmarshal(data, &alldata)
-
-    //fmt.Println("Raw: ", alldata.Raw)
     output, err := os.Create(filename)
     if err != nil {
         fmt.Println(err)
@@ -25,11 +19,11 @@ func WritePEMFile(data []byte, filename string) {
     }
     defer output.Close()
 
-    r := strings.NewReader(alldata.Raw)
+    r := strings.NewReader(cert.Raw)
 
-    io.WriteString(output, "-----BEGIN CERTIFICATE-----")
+    output.WriteString("-----BEGIN CERTIFICATE-----")
     for {
-        io.WriteString(output, "\r\n")
+        output.WriteString("\r\n")
         num, err := io.CopyN(output, r, 64)
         if err != nil {
             fmt.Println(err)
@@ -40,6 +34,15 @@ func WritePEMFile(data []byte, filename string) {
             break
         }
     }
-    io.WriteString(output, "\r\n-----END CERTIFICATE-----")
+    output.WriteString("\r\n-----END CERTIFICATE-----")
 }
 
+func loadPEM(path string) []byte {
+    contnet, err := ioutil.ReadFile(path)
+    if err != nil {
+        fmt.Println(err)
+        log.Fatal(err)
+    }
+
+    return contnet
+}
