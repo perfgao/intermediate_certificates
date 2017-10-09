@@ -31,12 +31,12 @@ func Export() {
 
     fmt.Println("Query: ", query_data)
 
-    reqoption := ReqOptions {
+    reqoption := reqOptions {
         method : "POST",
         suburl : "/export",
         bodyFlag : true,
         body : query_data,
     }
 
-    fmt.Println(string(Request(reqoption)))
+    fmt.Println(string(request(reqoption)))
  }

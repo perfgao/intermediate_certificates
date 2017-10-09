@@ -17,14 +17,14 @@ var uId string = ""
 var secret string = ""
 */
 
-type ReqOptions struct {
+type reqOptions struct {
     method string
     suburl string
     body string
     bodyFlag bool
 }
 
-func request(option ReqOptions) []byte {
+func request(option reqOptions) []byte {
     client := &http.Client{}
 
     var nbody io.Reader
@@ -63,7 +63,7 @@ func request(option ReqOptions) []byte {
 }
 
 func query(query_data string) []byte {
-    return request(ReqOptions{
+    return request(reqOptions{
         method : "POST",
         suburl : "/search/certificates",
         bodyFlag : true,
@@ -72,7 +72,7 @@ func query(query_data string) []byte {
 }
 
 func view(sha256 string) []byte {
-    return request(ReqOptions{
+    return request(reqOptions{
         method : "GET",
         suburl : "/view/certificates/" + sha256,
         bodyFlag : false,
@@ -80,7 +80,7 @@ func view(sha256 string) []byte {
 }
 
 func search(data string) []byte {
-    return request(ReqOptions{
+    return request(reqOptions{
         method : "POST",
         suburl : "/search/certificates",
         bodyFlag : true,

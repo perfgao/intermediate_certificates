@@ -6,7 +6,7 @@ import (
 
 
 func main () {
-    var root RootCert
+    var root censys.RootCert
 
     root.ParseRootQuery(root.GetAllRoot())
 }

@@ -10,7 +10,7 @@ type RootCert struct {
 }
 
 func (root *RootCert) Query(query_data string) []byte {
-    return Request(ReqOptions{
+    return request(reqOptions{
         method : "POST",
         suburl : "/search/certificates",
         bodyFlag : true,
@@ -19,7 +19,7 @@ func (root *RootCert) Query(query_data string) []byte {
 }
 
 func (root *RootCert) View(sha256 string) []byte {
-    return Request(ReqOptions{
+    return request(reqOptions{
         method : "GET",
         suburl : "/view/certificates/" + sha256,
         bodyFlag : false,
