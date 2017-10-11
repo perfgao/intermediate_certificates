@@ -27,7 +27,7 @@ func (root *RootCert) View(sha256 string) []byte {
 }
 
 func (root *RootCert)GetAllRoot() []byte {
-    query_sql := "tags: root"
+    query_sql := "tags: root and tags: trusted"
     query_data := Build_body_json(query_sql)
     if query_data == "" {
         fmt.Println("build query statement failed")
@@ -54,26 +54,11 @@ func (root *RootCert)ParseRootQuery(data []byte) {
 
     var children ChildrenCert
     for _, parsed := range list.Results {
-        certdetail := root.GetRootCert(parsed.Sha256)
+        fmt.Println("Root sha256: ", parsed.Sha256)
+        //PushSha256(parsed.Sha256)
+        respBody := root.View(parsed.Sha256)
+        certdetail := ParseAndStort(respBody)
         time.Sleep(1 * time.Second)
         children.GetAllChildren(certdetail)
     }
-}
-
-func (root *RootCert)GetRootCert(sha256 string) *CertDetails {
-    if sha256 == "" {
-        return nil
-    }
-
-    result := root.View(sha256)
-
-    certdetail := ParseCertDetail(result)
-
-    //AdjustPemFormat(certdetail.Raw)
-    //fmt.Println(string(cert))
-
-    name := BuildCertName(certdetail)
-    WritePEMFile(certdetail, "./root/" + name)
-
-    return &certdetail
 }

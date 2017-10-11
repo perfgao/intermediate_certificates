@@ -95,8 +95,22 @@ type CDExtensions struct {
 
 type CDParseds struct {
     Sha256 string `json:"fingerprint_sha256"`
+    Sha1 string `json:"fingerprint_sha1"`
+    Md5 string `json:"fingerprint_md5"`
     Subject CDSubjects `json:"subject"`
     Extension CDExtensions `json:"extensions"`
+    Validity CDValidity `json:"validity"`
+    Issuer CDIssuer `json:"issuer"`
+}
+
+type CDIssuer struct {
+    Cm []string `json:"common_name"`
+    O []string `json:"organization"`
+}
+
+type CDValidity struct {
+    Start string `json:"start"`
+    End string `json:"end"`
 }
 
 type CDCcadb struct {
@@ -110,8 +124,10 @@ type CDAudits struct {
 type CertDetails struct {
     Parsed CDParseds `json:"parsed"`
     Audit  CDAudits `json:"audit"`
+    Tags   []string `json:"tags"`
     Raw string `json:"raw"`
 }
+
 
 func BuildCertName(certdetail CertDetails) string {
     cn := certdetail.Audit.Ccadb.CertName
