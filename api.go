@@ -1,7 +1,7 @@
 package censys
 
 import (
-    "fmt"
+    "github.com/golang/glog"
 
     "io"
     "io/ioutil"
@@ -10,6 +10,14 @@ import (
 )
 
 var apiUrl string = "https://www.censys.io/api/v1"
+
+const (
+    OK_STATUS = 200
+    BAD_REQUEST = 400
+    NOT_FOUND = 404
+    RATE_LIMIT = 429
+    INTERNAL_SERVER_ERROR = 500
+)
 
 /* 
 * need register by https://www.censys.io/
@@ -24,7 +32,7 @@ type reqOptions struct {
     bodyFlag bool
 }
 
-func request(option reqOptions) []byte {
+func request(option reqOptions) ([]byte, int) {
     client := &http.Client{}
 
     var nbody io.Reader
@@ -36,33 +44,31 @@ func request(option reqOptions) []byte {
 
     req, err := http.NewRequest(option.method, apiUrl + option.suburl, nbody)
     if err != nil {
-        fmt.Println(err)
-        return nil
+        glog.Error(err)
+        return nil, 0
     }
 
     req.SetBasicAuth(uId, secret)
 
     resp, err := client.Do(req)
     if err != nil {
-        fmt.Println(err)
-        return nil
+        glog.Error(err)
+        return nil, 0
     }
     defer resp.Body.Close()
 
-    fmt.Println(resp.Status)
+    glog.V(2).Infoln(resp.Status)
 
     respBody, err := ioutil.ReadAll(resp.Body)
     if err != nil {
-        fmt.Println(err)
-        return nil
+        glog.Error(err)
+        return nil, 0
     }
 
-    //fmt.Println(string(respBody))
-
-    return respBody
+    return respBody, resp.StatusCode
 }
 
-func query(query_data string) []byte {
+func query(query_data string) ([]byte, int) {
     return request(reqOptions{
         method : "POST",
         suburl : "/search/certificates",
@@ -71,7 +77,7 @@ func query(query_data string) []byte {
     })
 }
 
-func view(sha256 string) []byte {
+func view(sha256 string) ([]byte, int) {
     return request(reqOptions{
         method : "GET",
         suburl : "/view/certificates/" + sha256,
@@ -79,7 +85,7 @@ func view(sha256 string) []byte {
     })
 }
 
-func search(data string) []byte {
+func search(data string) ([]byte, int) {
     return request(reqOptions{
         method : "POST",
         suburl : "/search/certificates",

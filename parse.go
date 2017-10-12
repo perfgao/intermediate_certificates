@@ -1,8 +1,7 @@
 package censys
 
 import (
-    "fmt"
-    "log"
+   "github.com/golang/glog"
     "encoding/json"
     "encoding/pem"
     "crypto/x509"
@@ -14,9 +13,9 @@ import (
 
 func ParseCert(sslContent []byte) *x509.Certificate {
     pemBlock, _ := pem.Decode(sslContent)
-    cert, err1 := x509.ParseCertificate(pemBlock.Bytes)
-    if err1 != nil {
-        log.Fatal(err1)
+    cert, err := x509.ParseCertificate(pemBlock.Bytes)
+    if err != nil {
+        glog.Error(err)
     }
 
     return cert
@@ -39,7 +38,6 @@ func ParseRoot() string {
     cert := ParseCert(contnet)
 
     sha256 := GetSha256(cert)
-    fmt.Println(sha256)
     return sha256
 }
 
@@ -67,15 +65,15 @@ func ParseIntermediate(data []byte) *QueryList {
     var intermediate QueryList
     json.Unmarshal(data, &intermediate)
 
-    fmt.Println(intermediate.Status, intermediate.Metadata.Count)
+    glog.V(2).Infoln(intermediate.Status, intermediate.Metadata.Count)
 
     if intermediate.Status != "ok" {
-        fmt.Println("failed")
+        glog.Info("status: ", intermediate.Status)
         return nil
     }
 
     if intermediate.Metadata.Count <= 0 {
-        fmt.Println("get result count <= 0")
+        glog.V(2).Infoln("ParseIntermediate, get result count <= 0")
         return nil
     }
 
@@ -136,7 +134,6 @@ func BuildCertName(certdetail CertDetails) string {
     }
 
     return cn + "_" + certdetail.Parsed.Sha256
-    //WritePEMFile(data, "./intermediate/" + cn + "_" + certdetail.Parsed.Sha256)
 }
 
 func ParseCertDetail(data []byte) CertDetails {

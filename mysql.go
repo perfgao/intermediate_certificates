@@ -4,7 +4,7 @@ import (
    "github.com/astaxie/beego/orm"
    _ "github.com/go-sql-driver/mysql"
    "time"
-   "log"
+   "github.com/golang/glog"
 )
 
 const (
@@ -15,6 +15,7 @@ const (
     sqlHost = "127.0.0.1"
     sqlPort = "3306"
     sqlDB = "ssl"
+    tableName = "certificate_record"
 )
 
 func init() {
@@ -22,13 +23,13 @@ func init() {
                     sqlPort + ")/" + sqlDB + "?charset=utf8&parseTime=true"
     //orm.Debug = true
     orm.RegisterDataBase(aliasName, diverName, db_conn_str, 30)
-    orm.RegisterModel(new(certRecord))
+    orm.RegisterModel(new(certificateRecord))
     orm.RunSyncdb(aliasName, false, true)
 
     dbconn := orm.NewOrm()
-    _, err := dbconn.Raw("alter table cert_record convert to character set utf8").Exec()
+    _, err := dbconn.Raw("alter table " + tableName +" convert to character set utf8").Exec()
     if err != nil {
-        log.Println("convert character failed, ", err)
+        glog.Fatal("convert character failed, ", err)
     }
 
     ConnectPool()
@@ -36,7 +37,7 @@ func init() {
 }
 
 
-type certRecord struct {
+type certificateRecord struct {
     Id int `pk:"auto"`
     Raw string `orm:"type(text)"`
     Type string `orm:"size(16);index;null"`
@@ -53,9 +54,9 @@ type certRecord struct {
     Raw_data string `orm:"type(text)"`
 }
 
-func insertIntoSql(info certRecord) error {
+func insertIntoSql(info certificateRecord) error {
     orm:=orm.NewOrm()
-    orm.Using("default")
+    orm.Using(aliasName)
     _,err:=orm.InsertOrUpdate(&info)
     return err
 }

@@ -1,7 +1,7 @@
 package censys
 
 import (
-    "fmt"
+    "github.com/golang/glog"
     "bytes"
     "sort"
     "net/url"
@@ -61,15 +61,15 @@ type Querys struct {
     Flatten bool `json:flatten, omitempty`
 }
 
-func Build_body_json(query string) string {
+func Build_body_json(query string, page int) string {
     var data Querys
     data.Query = query
     data.Flatten = true
-    data.Page = 1
+    data.Page = page
 
     d, err := json.Marshal(data)
     if err != nil {
-        fmt.Println(err)
+        glog.Error(err)
         return ""
     }
     return string(d)

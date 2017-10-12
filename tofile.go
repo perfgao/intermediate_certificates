@@ -1,8 +1,7 @@
 package censys
 
 import (
-    "fmt"
-    "log"
+    "github.com/golang/glog"
     "os"
     "io"
     "io/ioutil"
@@ -14,7 +13,7 @@ func WritePEMFile(cert CertDetails, filename string) {
 
     output, err := os.Create(filename)
     if err != nil {
-        fmt.Println(err)
+        glog.Error(err)
         return
     }
     defer output.Close()
@@ -26,7 +25,7 @@ func WritePEMFile(cert CertDetails, filename string) {
         output.WriteString("\r\n")
         num, err := io.CopyN(output, r, 64)
         if err != nil {
-            fmt.Println(err)
+            glog.Error(err)
             break
         }
 
@@ -40,8 +39,7 @@ func WritePEMFile(cert CertDetails, filename string) {
 func loadPEM(path string) []byte {
     contnet, err := ioutil.ReadFile(path)
     if err != nil {
-        fmt.Println(err)
-        log.Fatal(err)
+        glog.Fatal(err)
     }
 
     return contnet
