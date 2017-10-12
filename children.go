@@ -1,7 +1,7 @@
 package censys
 
 import (
-    "fmt"
+    "github.com/golang/glog"
     "time"
 )
 
@@ -19,35 +19,61 @@ func (children *ChildrenCert)GetAllChildren(parent *CertDetails) {
     query_sql := "parsed.extensions.authority_key_id: " +
         subjectKeyId + " and tags: trusted and tags: intermediate"
 
-    bodyData := Build_body_json(query_sql)
-    if bodyData == "" {
-        return
-    }
+    var page int = 0
+    var sleep int = 1
+    for ;; {
+        page += 1
+        bodyData := Build_body_json(query_sql, page)
+        if bodyData == "" {
+            return
+        }
 
-    result := search(bodyData)
-    childrens := ParseIntermediate(result)
+        time.Sleep(5 * time.Second)
+
+    RETRY3:
+        result, status := search(bodyData)
+        if status == RATE_LIMIT {
+            sleep += 5
+            time.Sleep(time.Duration(sleep) * time.Second)
+            goto RETRY3
+        }
+
+        sleep = 1
+
+        if children.ParseChildQuery(result, parent.Parsed.Sha256) == 0 {
+            break
+        }
+
+    }
+}
+
+func (child *ChildrenCert)ParseChildQuery(data []byte, psha256 string) int {
+    childrens := ParseIntermediate(data)
     if childrens == nil {
-        return
+        return 0
     }
 
-    parentSha256 := parent.Parsed.Sha256
     for _, parsed := range childrens.Results {
-        fmt.Println("children_sha256: ", parsed.Sha256)
-        if parsed.Sha256 != parentSha256 {
-            //PushSha256(parsed.Sha256)
+        glog.V(2).Infoln("get children_sha256: ", parsed.Sha256)
+        if parsed.Sha256 != psha256 {
+            PushSha256(parsed.Sha256)
+            /*
             respBody := view(parsed.Sha256)
             certdetail := ParseAndStort(respBody)
             time.Sleep(5 * time.Second)
             children.GetAllChildren(certdetail)
+            */
         }
     }
+
+    return len(childrens.Results)
 }
 
 func ParseAndStort(resp []byte) *CertDetails {
     certdetail := ParseCertDetail(resp)
     cert := AdjustPemFormat(certdetail.Raw)
 
-    var sqlrecord certRecord
+    var sqlrecord certificateRecord
 
     sqlrecord.Raw_data = string(resp)
     sqlrecord.Raw = string(cert)
@@ -79,9 +105,9 @@ func ParseAndStort(resp []byte) *CertDetails {
     }
 
     if err := insertIntoSql(sqlrecord); err != nil {
-        fmt.Println(err)
+        glog.Error(err)
     } else {
-        fmt.Println("Succ")
+        glog.V(2).Infoln("insert or update mysql Succ")
     }
 
     return &certdetail
