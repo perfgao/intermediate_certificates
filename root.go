@@ -48,7 +48,7 @@ func (root *RootCert)GetAllRoot() {
             glog.V(2).Infoln(string(result))
 
             if root.ParseRootQuery(result) == 0 {
-                break
+                return
             }
         case RATE_LIMIT:
             sleep += 5
@@ -58,7 +58,7 @@ func (root *RootCert)GetAllRoot() {
             glog.Error("query_data: %s, BAD_REQUEST", query_data)
         case NOT_FOUND:
             glog.Error("query_data: %s, NOT_FOUND", query_data)
-            break
+            return
         case INTERNAL_SERVER_ERROR:
             glog.Error("query_data: %s, INTERNAL_SERVER_ERROR", query_data)
         default:
@@ -119,7 +119,7 @@ func (root *RootCert) Handlersha256() {
             glog.Error("query sha256: %s, BAD_REQUEST", sha256)
         case NOT_FOUND:
             glog.Infof("query sha256: %s NOT_FOUND", sha256)
-            break
+            return
         case INTERNAL_SERVER_ERROR:
             glog.Error("query sha256: %s, INTERNAL_SERVER_ERROR", sha256)
         default:

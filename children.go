@@ -37,7 +37,7 @@ func (children *ChildrenCert)GetAllChildren(parent *CertDetails) {
         switch status {
         case OK_STATUS:
             if children.ParseChildQuery(result, parent.Parsed.Sha256) == 0 {
-                break
+                return
             }
         case RATE_LIMIT:
             sleep += 5
