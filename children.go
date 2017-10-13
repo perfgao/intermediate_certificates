@@ -13,6 +13,7 @@ type ChildrenCert struct{
 func (children *ChildrenCert)GetAllChildren(parent *CertDetails) {
     subjectKeyId := parent.Parsed.Extension.SubjectKeyId
     if subjectKeyId == "" {
+        glog.Infof("subjectKeyId is null: %s", parent.Parsed.Sha256)
         return
     }
 
@@ -20,7 +21,7 @@ func (children *ChildrenCert)GetAllChildren(parent *CertDetails) {
         subjectKeyId + " and tags: trusted and tags: intermediate"
 
     var page int = 0
-    var sleep int = 1
+    var sleep int = 5
     for ;; {
         page += 1
         bodyData := Build_body_json(query_sql, page)
@@ -28,22 +29,34 @@ func (children *ChildrenCert)GetAllChildren(parent *CertDetails) {
             return
         }
 
-        time.Sleep(5 * time.Second)
+        time.Sleep(time.Duration(sleep) * time.Second)
 
     RETRY3:
         result, status := search(bodyData)
-        if status == RATE_LIMIT {
+        switch status {
+        case OK_STATUS:
+            if children.ParseChildQuery(result, parent.Parsed.Sha256) == 0 {
+                break
+            }
+        case RATE_LIMIT:
             sleep += 5
             time.Sleep(time.Duration(sleep) * time.Second)
             goto RETRY3
+        case BAD_REQUEST:
+            glog.Error("query authority_key_id: %s, BAD_REQUEST", subjectKeyId)
+        case NOT_FOUND:
+            glog.Infof("query authority_key_id: %s NOT_FOUND", subjectKeyId)
+        case INTERNAL_SERVER_ERROR:
+            glog.Error("query authority_key_id: %s, INTERNAL_SERVER_ERROR",
+                        subjectKeyId)
+        default:
+            glog.Error("query authority_key_id: %s, status: %d",
+                        subjectKeyId, status)
         }
 
-        sleep = 1
-
-        if children.ParseChildQuery(result, parent.Parsed.Sha256) == 0 {
-            break
+        if sleep > 5 {
+            sleep -= 1
         }
-
     }
 }
 
@@ -54,15 +67,11 @@ func (child *ChildrenCert)ParseChildQuery(data []byte, psha256 string) int {
     }
 
     for _, parsed := range childrens.Results {
+
         glog.V(2).Infoln("get children_sha256: ", parsed.Sha256)
+
         if parsed.Sha256 != psha256 {
             PushSha256(parsed.Sha256)
-            /*
-            respBody := view(parsed.Sha256)
-            certdetail := ParseAndStort(respBody)
-            time.Sleep(5 * time.Second)
-            children.GetAllChildren(certdetail)
-            */
         }
     }
 
