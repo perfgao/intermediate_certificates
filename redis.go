@@ -46,7 +46,7 @@ func PushSha256(sha256 string)  {
     conn := RedisPool.Get()
     defer conn.Close()
 
-    res, err := redigo.Strings(PushSha_SC.Do(conn, handled_key,
+    res, err := redigo.Int64(PushSha_SC.Do(conn, handled_key,
                                               handling_key, sha256))
     if err != nil {
         glog.Error(err)

@@ -65,7 +65,8 @@ func ParseIntermediate(data []byte) *QueryList {
     var intermediate QueryList
     json.Unmarshal(data, &intermediate)
 
-    glog.V(2).Infoln(intermediate.Status, intermediate.Metadata.Count)
+    glog.V(2).Infoln("status: ", intermediate.Status,
+                     " count: ", intermediate.Metadata.Count)
 
     if intermediate.Status != "ok" {
         glog.Info("status: ", intermediate.Status)

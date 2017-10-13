@@ -7,8 +7,9 @@ local sha256 = KEYS[3]
 
 local exsist = redis.call("SISMEMBER", handled_set, sha256)
 if exsist == 1 then
-    return
+    return 0
 end
 
 redis.call("SADD", handling_set, sha256)
+return 1
 `
