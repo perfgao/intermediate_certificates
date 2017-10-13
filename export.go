@@ -38,5 +38,6 @@ func Export() {
         body : query_data,
     }
 
-    fmt.Println(string(request(reqoption)))
- }
+    res, _ := request(reqoption)
+    fmt.Println(string(res))
+}
