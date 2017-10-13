@@ -52,6 +52,7 @@ type certificateRecord struct {
     Validity_end string `orm:"size(24)"`
     Issuer_cm string `orm:"size(512);null"`
     Raw_data string `orm:"type(text)"`
+    Paths string `orm:"size(2048)"`
 }
 
 func insertIntoSql(info certificateRecord) error {

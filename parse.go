@@ -124,6 +124,7 @@ type CertDetails struct {
     Audit  CDAudits `json:"audit"`
     Tags   []string `json:"tags"`
     Raw string `json:"raw"`
+    Validation map[string]*json.RawMessage
 }
 
 

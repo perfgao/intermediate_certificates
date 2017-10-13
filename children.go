@@ -3,6 +3,7 @@ package censys
 import (
     "github.com/golang/glog"
     "time"
+    "strings"
 )
 
 type ChildrenCert struct{
@@ -100,6 +101,12 @@ func ParseAndStort(resp []byte) *CertDetails {
             sqlrecord.Type = "intermediate"
         }
     }
+
+    path := SuitPath(&certdetail)
+    strpath := strings.Join(path, "|")
+    glog.V(2).Infoln("to string: ", strpath)
+
+    sqlrecord.Paths = strpath
 
     parsed := certdetail.Parsed
 
