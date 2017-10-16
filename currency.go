@@ -46,8 +46,8 @@ type setpathPair struct {
 
 
 func SuitPath(cert *CertDetails) []string {
-    var maxNum int = 0
-    var setpaths []setpathPair
+    var maxNum int = 1
+    var setpaths []*setpathPair
     var psp *setpathPair
 
     for _, rawmessage := range cert.Validation {
@@ -63,38 +63,55 @@ func SuitPath(cert *CertDetails) []string {
             continue
         }
 
-        for _, paths := range pathinfo.Paths {
-            var localSp setpathPair
+        infoPaths := pathinfo.Paths
+        for index, paths := range infoPaths {
             var localSt set.Strings = set.NewStrings()
             for _, path := range paths {
                 localSt.Add(path)
             }
 
-            var is_new bool = true
+            var isExist = false
             for _, sp := range setpaths {
-                if sp.set.Equal(localSt) == true {
-                    sp.count += 1
-                    is_new = false
+                if sp.set.Equal(localSt) != true {
+                    continue
                 }
 
+                /* set is equal, means already exist*/
+                isExist = true
+                /* update count */
+                sp.count += 1
+                /* update psp */
                 if sp.count > maxNum {
                     maxNum = sp.count
-                    psp = &sp
+                    psp = sp
+                } else if sp.count == maxNum {
+                    if len(*sp.path) < len(*psp.path) {
+                        psp = sp
+                    }
                 }
+
+                break
             }
 
-            if is_new == true {
+            if isExist == false {
+                var localSp setpathPair
                 localSp.set = &localSt
-                localSp.path = &paths
+                localSp.path = &infoPaths[index]
                 localSp.count = 1
-                if maxNum < 1 {
-                    psp = &localSp
+                if maxNum == 1 {
+                    if psp == nil {
+                        psp = &localSp
+                    } else if len(paths) < len(*psp.path) {
+                        psp = &localSp
+                    }
                 }
+
+                setpaths = append(setpaths, &localSp)
             }
         }
     }
 
-    if psp == nil {
+    if psp == nil || len(*psp.path) == 0 {
         glog.Error("sha256: ", cert.Parsed.Sha256, " not suit path")
         return nil
     }
