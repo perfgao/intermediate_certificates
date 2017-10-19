@@ -14,7 +14,7 @@ const (
     sqlPasswd = "root"
     sqlHost = "127.0.0.1"
     sqlPort = "3306"
-    sqlDB = "ssl"
+    sqlDB = "sslcerts"
     tableName = "certificate_record"
 )
 
@@ -51,8 +51,11 @@ type certificateRecord struct {
     Validity_start string `orm:"size(24)"`
     Validity_end string `orm:"size(24)"`
     Issuer_cm string `orm:"size(512);null"`
+    Subject_cm string `orm:"size(512);null"`
     Paths string `orm:"size(2048)"`
     Raw_data string `orm:"type(text)"`
+    Support int `orm:"default(0)"`
+    Pathlen int `orm:"default(0)"`
 }
 
 func insertIntoSql(info certificateRecord) error {
