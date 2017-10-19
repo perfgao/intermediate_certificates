@@ -102,11 +102,13 @@ func ParseAndStort(resp []byte) *CertDetails {
         }
     }
 
-    path := SuitPath(&certdetail)
+    path, supportNum := SuitPath(&certdetail)
     strpath := strings.Join(path, "|")
-    glog.V(2).Infoln("to string: ", strpath)
+    glog.V(2).Infoln("to string: ", strpath, " supportNum: ", supportNum)
 
+    sqlrecord.Support = supportNum
     sqlrecord.Paths = strpath
+    sqlrecord.Pathlen = len(path)
 
     parsed := certdetail.Parsed
 
@@ -118,6 +120,10 @@ func ParseAndStort(resp []byte) *CertDetails {
     sqlrecord.Validity_end = parsed.Validity.End
     if len(parsed.Issuer.Cm) > 0 {
         sqlrecord.Issuer_cm = parsed.Issuer.Cm[0]
+    }
+
+    if len(parsed.Subject.CN) > 0 {
+        sqlrecord.Subject_cm = parsed.Subject.CN[0]
     }
 
     if err := insertIntoSql(sqlrecord); err != nil {

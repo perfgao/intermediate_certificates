@@ -45,9 +45,8 @@ type setpathPair struct {
 }
 
 
-func SuitPath(cert *CertDetails) []string {
-    var maxNum int = 1
-    var setpaths []*setpathPair
+func SuitPath(cert *CertDetails) (suitpath []string, countMaxNum int) {
+    var setpathsArray []*setpathPair
     var psp *setpathPair
 
     for _, rawmessage := range cert.Validation {
@@ -55,7 +54,7 @@ func SuitPath(cert *CertDetails) []string {
         mess, _ := rawmessage.MarshalJSON()
         if err := json.Unmarshal(mess, &pathinfo); err != nil {
             glog.Error(err)
-            return nil
+            return
         }
 
         if (pathinfo.In_revocation_set || !pathinfo.Trusted_path ||
@@ -71,7 +70,7 @@ func SuitPath(cert *CertDetails) []string {
             }
 
             var isExist = false
-            for _, sp := range setpaths {
+            for _, sp := range setpathsArray {
                 if sp.set.Equal(localSt) != true {
                     continue
                 }
@@ -81,15 +80,16 @@ func SuitPath(cert *CertDetails) []string {
                 /* update count */
                 sp.count += 1
                 /* update psp */
-                if sp.count > maxNum {
-                    maxNum = sp.count
+                if sp.count > countMaxNum {
+                    countMaxNum = sp.count
                     psp = sp
-                } else if sp.count == maxNum {
-                    if len(*sp.path) < len(*psp.path) {
+                } else if sp.count == countMaxNum {
+                    if len(*sp.path) > 0 && len(*sp.path) < len(*psp.path) {
                         psp = sp
                     }
                 }
 
+                /*localSt already exist in SETS, need't next list*/
                 break
             }
 
@@ -98,25 +98,28 @@ func SuitPath(cert *CertDetails) []string {
                 localSp.set = &localSt
                 localSp.path = &infoPaths[index]
                 localSp.count = 1
-                if maxNum == 1 {
-                    if psp == nil {
-                        psp = &localSp
-                    } else if len(paths) < len(*psp.path) {
+
+                if localSp.count > countMaxNum {
+                    countMaxNum = localSp.count
+                    psp = &localSp
+                } else if localSp.count == countMaxNum {
+                    if len(paths) > 0 && len(paths) < len(*psp.path) {
                         psp = &localSp
                     }
                 }
 
-                setpaths = append(setpaths, &localSp)
+                setpathsArray = append(setpathsArray, &localSp)
             }
         }
     }
 
     if psp == nil || len(*psp.path) == 0 {
         glog.Error("sha256: ", cert.Parsed.Sha256, " not suit path")
-        return nil
+        return
     }
 
-    glog.V(2).Infoln("suit path: ", *psp.path)
+    glog.V(2).Infoln("suit path: ", *psp.path, " supportNum: ", countMaxNum)
 
-    return *psp.path
+    suitpath = *psp.path
+    return
 }
