@@ -44,14 +44,14 @@ func (children *ChildrenCert)GetAllChildren(parent *CertDetails) {
             time.Sleep(time.Duration(sleep) * time.Second)
             goto RETRY3
         case BAD_REQUEST:
-            glog.Error("query authority_key_id: %s, BAD_REQUEST", subjectKeyId)
+            glog.Errorf("query authority_key_id: %s, BAD_REQUEST", subjectKeyId)
         case NOT_FOUND:
             glog.Infof("query authority_key_id: %s NOT_FOUND", subjectKeyId)
         case INTERNAL_SERVER_ERROR:
-            glog.Error("query authority_key_id: %s, INTERNAL_SERVER_ERROR",
+            glog.Errorf("query authority_key_id: %s, INTERNAL_SERVER_ERROR",
                         subjectKeyId)
         default:
-            glog.Error("query authority_key_id: %s, status: %d",
+            glog.Errorf("query authority_key_id: %s, status: %d",
                         subjectKeyId, status)
         }
 
@@ -127,7 +127,7 @@ func ParseAndStort(resp []byte) *CertDetails {
     }
 
     if err := insertIntoSql(sqlrecord); err != nil {
-        glog.Error(err)
+        glog.Error("sha256: ", parsed.Sha256, ", ",err)
     } else {
         glog.V(2).Infoln("insert or update mysql Succ")
     }

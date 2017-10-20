@@ -55,14 +55,14 @@ func (root *RootCert)GetAllRoot() {
             time.Sleep(time.Duration(sleep) * time.Second)
             goto RETRY2
         case BAD_REQUEST:
-            glog.Error("query_data: %s, BAD_REQUEST", query_data)
+            glog.Errorf("query_data: %s, BAD_REQUEST", query_data)
         case NOT_FOUND:
-            glog.Error("query_data: %s, NOT_FOUND", query_data)
+            glog.Errorf("query_data: %s, NOT_FOUND", query_data)
             return
         case INTERNAL_SERVER_ERROR:
-            glog.Error("query_data: %s, INTERNAL_SERVER_ERROR", query_data)
+            glog.Errorf("query_data: %s, INTERNAL_SERVER_ERROR", query_data)
         default:
-            glog.Error("query_data: %s, status: %d", query_data, status)
+            glog.Errorf("query_data: %s, status: %d", query_data, status)
         }
 
         if sleep > 1 {
@@ -116,14 +116,14 @@ func (root *RootCert) Handlersha256() {
             time.Sleep(time.Duration(sleep) * time.Second)
             goto RETRY
         case BAD_REQUEST:
-            glog.Error("query sha256: %s, BAD_REQUEST", sha256)
+            glog.Errorf("query sha256: %s, BAD_REQUEST", sha256)
         case NOT_FOUND:
             glog.Infof("query sha256: %s NOT_FOUND", sha256)
             return
         case INTERNAL_SERVER_ERROR:
-            glog.Error("query sha256: %s, INTERNAL_SERVER_ERROR", sha256)
+            glog.Errorf("query sha256: %s, INTERNAL_SERVER_ERROR", sha256)
         default:
-            glog.Error("query sha256: %s, status: %d", sha256, status)
+            glog.Errorf("query sha256: %s, status: %d", sha256, status)
         }
 
         if sleep > 1{
