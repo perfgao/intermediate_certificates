@@ -90,3 +90,16 @@ func ResetSha256(sha256 string) {
 
     glog.V(2).Infof("reset %s %s", sha256, res)
 }
+
+func redisClear() {
+    conn := RedisPool.Get()
+    defer conn.Close()
+
+    res, err := redigo.String(conn.Do("DEL", handling_key, handled_key))
+    if err != nil {
+        glog.Error(err)
+        return
+    }
+
+    glog.V(2).Infoln("Clear: %s", res)
+}

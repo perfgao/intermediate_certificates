@@ -131,3 +131,7 @@ func (root *RootCert) Handlersha256() {
         }
     }
 }
+
+func (root *RootCert) Clear () {
+    redisClear()
+}

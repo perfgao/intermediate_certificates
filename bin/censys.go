@@ -15,4 +15,6 @@ func main () {
 
     root.GetAllRoot()
     root.Handlersha256()
+
+    root.Clear()
 }
