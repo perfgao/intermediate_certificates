@@ -46,7 +46,7 @@ type certificateRecord struct {
     Fingerprint_sha256 string `orm:"size(64);unique"`
     Fingerprint_md5 string `orm:"size(32);index"`
     Fingerprint_sha1 string `orm:"size(64);index"`
-    Subject_key_id string `orm:"size(64);index"`
+    Subject_key_id string `orm:"size(128);index"`
     Unexpired bool `orm:null`
     Validity_start string `orm:"size(24)"`
     Validity_end string `orm:"size(24)"`
