@@ -32,6 +32,7 @@ func (children *ChildrenCert)GetAllChildren(parent *CertDetails) {
 
         time.Sleep(time.Duration(sleep) * time.Second)
 
+        var bad_req_retry int = 0
     RETRY3:
         result, status := search(bodyData)
         switch status {
@@ -45,6 +46,10 @@ func (children *ChildrenCert)GetAllChildren(parent *CertDetails) {
             goto RETRY3
         case BAD_REQUEST:
             glog.Errorf("query authority_key_id: %s, BAD_REQUEST", subjectKeyId)
+            if bad_req_retry < 1 {
+                bad_req_retry++
+                goto RETRY3
+            }
         case NOT_FOUND:
             glog.Infof("query authority_key_id: %s NOT_FOUND", subjectKeyId)
         case INTERNAL_SERVER_ERROR:
