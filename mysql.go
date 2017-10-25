@@ -1,24 +1,27 @@
 package censys
 
 import (
-   "github.com/astaxie/beego/orm"
-   _ "github.com/go-sql-driver/mysql"
-   "time"
-   "github.com/golang/glog"
+    "github.com/astaxie/beego/orm"
+    _ "github.com/go-sql-driver/mysql"
+    "time"
+    "github.com/golang/glog"
+
+    "perfgao/censys_io/config"
 )
 
 const (
     aliasName = "default"
     diverName = "mysql"
-    sqlUser = "root"
-    sqlPasswd = "root"
-    sqlHost = "127.0.0.1"
-    sqlPort = "3306"
-    sqlDB = "sslcerts"
-    tableName = "certificate_record"
 )
 
-func init() {
+func Sqlinit(conf config.Sqlconfig) {
+    sqlUser := conf.User
+    sqlPasswd := conf.Passwd
+    sqlHost := conf.Addr
+    sqlPort := conf.Port
+    sqlDB := conf.DB
+    tableName := conf.Table
+
     db_conn_str := sqlUser + ":" + sqlPasswd + "@tcp(" +sqlHost + ":" +
                     sqlPort + ")/" + sqlDB + "?charset=utf8&parseTime=true"
     //orm.Debug = true
