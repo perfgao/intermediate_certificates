@@ -95,11 +95,11 @@ func redisClear() {
     conn := RedisPool.Get()
     defer conn.Close()
 
-    res, err := redigo.String(conn.Do("DEL", handling_key, handled_key))
+    res, err := redigo.Int64(conn.Do("DEL", handling_key, handled_key))
     if err != nil {
         glog.Error(err)
         return
     }
 
-    glog.V(2).Infoln("Clear: %s", res)
+    glog.V(2).Infoln("Clear: %d", res)
 }
