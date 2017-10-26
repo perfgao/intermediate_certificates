@@ -61,6 +61,12 @@ func (root *RootCert)GetAllRoot() {
             return
         case INTERNAL_SERVER_ERROR:
             glog.Errorf("query_data: %s, INTERNAL_SERVER_ERROR", query_data)
+        case TIMEOUT:
+            glog.Errorf("query_data: %s, TIMEOUT", query_data)
+            goto RETRY2
+        case PROTOCOL_ERROR:
+            glog.Errorf("query_data: %s, PROTOCOL_ERROR", query_data)
+            goto RETRY2
         default:
             glog.Errorf("query_data: %s, status: %d", query_data, status)
         }
@@ -122,6 +128,12 @@ func (root *RootCert) Handlersha256() {
             return
         case INTERNAL_SERVER_ERROR:
             glog.Errorf("query sha256: %s, INTERNAL_SERVER_ERROR", sha256)
+        case TIMEOUT:
+            glog.Errorf("query_data: %s, TIMEOUT", sha256)
+            goto RETRY
+        case PROTOCOL_ERROR:
+            glog.Errorf("query_data: %s, PROTOCOL_ERROR", sha256)
+            goto RETRY
         default:
             glog.Errorf("query sha256: %s, status: %d", sha256, status)
         }

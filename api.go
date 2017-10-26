@@ -7,6 +7,7 @@ import (
     "io/ioutil"
     "net/http"
     "strings"
+    "fmt"
 )
 
 var apiUrl string = "https://www.censys.io/api/v1"
@@ -17,6 +18,11 @@ const (
     NOT_FOUND = 404
     RATE_LIMIT = 429
     INTERNAL_SERVER_ERROR = 500
+
+    FAIL_STATUS = 0
+    PROTOCOL_ERROR = 1
+    TIMEOUT = 502
+
 )
 
 /* 
@@ -45,15 +51,34 @@ func request(option reqOptions) ([]byte, int) {
     req, err := http.NewRequest(option.method, apiUrl + option.suburl, nbody)
     if err != nil {
         glog.Error(err)
-        return nil, 0
+        return nil, FAIL_STATUS
     }
 
     req.SetBasicAuth(uId, secret)
 
     resp, err := client.Do(req)
     if err != nil {
+
         glog.Error(err)
-        return nil, 0
+
+        strerr := fmt.Sprint(err)
+        /*
+        Post https://www.censys.io/api/v1/search/certificates: net/http: TLS handshake timeout
+        Get https://www.censys.io/api/v1/view/certificates/X: dial tcp 172.X.X.X:443: i/o timeout
+        */
+        if strings.Contains(strerr, "i/o timeout") ||
+        strings.Contains(strerr, "TLS handshake timeout") {
+            return nil, TIMEOUT
+        }
+
+        /*
+        Post https://www.censys.io/api/v1/search/certificates: stream error: stream ID 1; PROTOCOL_ERROR
+        */
+        if strings.Contains(strerr, "stream error: stream ID 1; PROTOCOL_ERROR") {
+            return nil, PROTOCOL_ERROR
+        }
+
+        return nil, FAIL_STATUS
     }
     defer resp.Body.Close()
 
@@ -62,7 +87,7 @@ func request(option reqOptions) ([]byte, int) {
     respBody, err := ioutil.ReadAll(resp.Body)
     if err != nil {
         glog.Error(err)
-        return nil, 0
+        return nil, FAIL_STATUS
     }
 
     return respBody, resp.StatusCode

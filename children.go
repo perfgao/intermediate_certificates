@@ -55,6 +55,12 @@ func (children *ChildrenCert)GetAllChildren(parent *CertDetails) {
         case INTERNAL_SERVER_ERROR:
             glog.Errorf("query authority_key_id: %s, INTERNAL_SERVER_ERROR",
                         subjectKeyId)
+        case TIMEOUT:
+            glog.Errorf("query_data: %s, TIMEOUT", subjectKeyId)
+            goto RETRY3
+        case PROTOCOL_ERROR:
+            glog.Errorf("query_data: %s, PROTOCOL_ERROR", subjectKeyId)
+            goto RETRY3
         default:
             glog.Errorf("query authority_key_id: %s, status: %d",
                         subjectKeyId, status)
