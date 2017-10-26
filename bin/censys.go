@@ -22,6 +22,7 @@ func main () {
 
     censys.Sqlinit(conf.Sql)
     censys.Redisinit(conf.Redis)
+    censys.APIinit(conf.Censys)
 
     var root censys.RootCert
 

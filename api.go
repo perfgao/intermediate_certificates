@@ -8,9 +8,10 @@ import (
     "net/http"
     "strings"
     "fmt"
+
+    "perfgao/censys_io/config"
 )
 
-var apiUrl string = "https://www.censys.io/api/v1"
 
 const (
     OK_STATUS = 200
@@ -36,6 +37,17 @@ type reqOptions struct {
     suburl string
     body string
     bodyFlag bool
+}
+
+var (
+    uId string
+    secret string
+    apiUrl string = "https://www.censys.io/api/v1"
+)
+
+func APIinit(conf config.Censysconfig) {
+    uId = conf.Uid
+    secret = conf.Secret
 }
 
 func request(option reqOptions) ([]byte, int) {
