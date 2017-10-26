@@ -5,6 +5,8 @@ import (
     "os"
     "strconv"
     "github.com/golang/glog"
+
+    "perfgao/censys_io/config"
 )
 
 var RedisPool *redigo.Pool
@@ -12,14 +14,12 @@ var PushSha_SC *redigo.Script
 var handled_key string
 var handling_key string
 
-func Script () {
-    PushSha_SC = redigo.NewScript(3, LUA_PUSH_SHA)
-    pid := strconv.Itoa(os.Getpid())
-    handled_key = "handled_key_" + pid
-    handling_key = "handlings_key_" + pid
-}
+func Redisinit(conf config.Redisconfig) {
+    redisHost := conf.Host
+    redisPasswd := conf.Passwd
+    redisDB := conf.DB
+    redisPoolSize := conf.Poolsize
 
-func ConnectPool() {
     RedisPool = redigo.NewPool(
         func() (redigo.Conn, error) {
             c, err := redigo.Dial("tcp", redisHost)
@@ -39,6 +39,12 @@ func ConnectPool() {
 
             return c, err
         }, redisPoolSize)
+
+    PushSha_SC = redigo.NewScript(3, LUA_PUSH_SHA)
+
+    pid := strconv.Itoa(os.Getpid())
+    handled_key = "handled_key_" + pid
+    handling_key = "handlings_key_" + pid
 }
 
 

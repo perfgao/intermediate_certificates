@@ -34,9 +34,6 @@ func Sqlinit(conf config.Sqlconfig) {
     if err != nil {
         glog.Fatal("convert character failed, ", err)
     }
-
-    ConnectPool()
-    Script()
 }
 
 
