@@ -1,9 +1,13 @@
-package censys
+package cert
 
 import (
     "github.com/golang/glog"
     "time"
     "strings"
+
+    "perfgao/censys_io/censys"
+    "perfgao/censys_io/redis"
+    "perfgao/censys_io/mysql"
 )
 
 type ChildrenCert struct{
@@ -25,7 +29,7 @@ func (children *ChildrenCert)GetAllChildren(parent *CertDetails) {
     var sleep int = 5
     for ;; {
         page += 1
-        bodyData := Build_body_json(query_sql, page)
+        bodyData := censys.Build_body_json(query_sql, page)
         if bodyData == "" {
             return
         }
@@ -34,7 +38,7 @@ func (children *ChildrenCert)GetAllChildren(parent *CertDetails) {
 
         var bad_req_retry int = 0
     RETRY3:
-        result, status := search(bodyData)
+        result, status := censys.Search(bodyData)
         switch status {
         case OK_STATUS:
             if children.ParseChildQuery(result, parent.Parsed.Sha256) == 0 {
@@ -83,7 +87,7 @@ func (child *ChildrenCert)ParseChildQuery(data []byte, psha256 string) int {
         glog.V(2).Infoln("get children_sha256: ", parsed.Sha256)
 
         if parsed.Sha256 != psha256 {
-            PushSha256(parsed.Sha256)
+            redis.PushSha256(parsed.Sha256)
         }
     }
 
@@ -94,7 +98,7 @@ func ParseAndStort(resp []byte) *CertDetails {
     certdetail := ParseCertDetail(resp)
     cert := AdjustPemFormat(certdetail.Raw)
 
-    var sqlrecord certificateRecord
+    var sqlrecord mysql.CertificateRecord
 
     sqlrecord.Raw_data = string(resp)
     sqlrecord.Raw = string(cert)
@@ -137,7 +141,7 @@ func ParseAndStort(resp []byte) *CertDetails {
         sqlrecord.Subject_cm = parsed.Subject.CN[0]
     }
 
-    if err := insertIntoSql(sqlrecord); err != nil {
+    if err := mysql.Insert(sqlrecord); err != nil {
         glog.Error("sha256: ", parsed.Sha256, ", ",err)
     } else {
         glog.V(2).Infoln("insert or update mysql Succ")

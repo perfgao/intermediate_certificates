@@ -105,7 +105,7 @@ func request(option reqOptions) ([]byte, int) {
     return respBody, resp.StatusCode
 }
 
-func query(query_data string) ([]byte, int) {
+func Query(query_data string) ([]byte, int) {
     return request(reqOptions{
         method : "POST",
         suburl : "/search/certificates",
@@ -114,7 +114,7 @@ func query(query_data string) ([]byte, int) {
     })
 }
 
-func view(sha256 string) ([]byte, int) {
+func View(sha256 string) ([]byte, int) {
     return request(reqOptions{
         method : "GET",
         suburl : "/view/certificates/" + sha256,
@@ -122,7 +122,7 @@ func view(sha256 string) ([]byte, int) {
     })
 }
 
-func search(data string) ([]byte, int) {
+func Search(data string) ([]byte, int) {
     return request(reqOptions{
         method : "POST",
         suburl : "/search/certificates",

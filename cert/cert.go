@@ -1,4 +1,4 @@
-package censys
+package cert
 
 import (
     "bytes"

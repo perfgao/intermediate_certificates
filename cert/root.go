@@ -1,30 +1,17 @@
-package censys
+package cert
 
 import (
     "github.com/golang/glog"
     "time"
     "encoding/json"
+
+    "perfgao/censys_io/censys"
+    "perfgao/censys_io/redis"
 )
 
 type RootCert struct {
 }
 
-func (root *RootCert) Query(query_data string) ([]byte, int) {
-    return request(reqOptions{
-        method : "POST",
-        suburl : "/search/certificates",
-        bodyFlag : true,
-        body : query_data,
-    })
-}
-
-func (root *RootCert) View(sha256 string) ([]byte, int) {
-    return request(reqOptions{
-        method : "GET",
-        suburl : "/view/certificates/" + sha256,
-        bodyFlag : false,
-    })
-}
 
 func (root *RootCert)GetAllRoot() {
     var page int = 0
@@ -33,7 +20,7 @@ func (root *RootCert)GetAllRoot() {
 
     for ;; {
         page += 1
-        query_data := Build_body_json(query_sql, page)
+        query_data := censys.Build_body_json(query_sql, page)
         if query_data == "" {
             glog.Error("build query statement failed!")
             return
@@ -42,7 +29,7 @@ func (root *RootCert)GetAllRoot() {
     RETRY2:
         glog.V(2).Infof("query_data: %s", query_data)
 
-        result, status := root.Query(query_data)
+        result, status := censys.Query(query_data)
         switch status {
         case OK_STATUS:
             glog.V(2).Infoln(string(result))
@@ -94,7 +81,7 @@ func (root *RootCert)ParseRootQuery(data []byte) int {
 
     for _, parsed := range list.Results {
         glog.V(2).Infof("result Root sha256: %s", parsed.Sha256)
-        PushSha256(parsed.Sha256)
+        redis.PushSha256(parsed.Sha256)
     }
 
     return len(list.Results)
@@ -103,7 +90,7 @@ func (root *RootCert)ParseRootQuery(data []byte) int {
 func (root *RootCert) Handlersha256() {
     var sleep int = 1
     for ;; {
-        sha256 := GetOneSha256()
+        sha256 := redis.GetOneSha256()
         if sha256 == "" {
             break
         }
@@ -111,7 +98,7 @@ func (root *RootCert) Handlersha256() {
         time.Sleep(time.Duration(sleep) * time.Second)
 
     RETRY:
-        respBody, status := root.View(sha256)
+        respBody, status := censys.View(sha256)
         switch status {
         case OK_STATUS:
             var children ChildrenCert
@@ -142,8 +129,4 @@ func (root *RootCert) Handlersha256() {
             sleep -= 1
         }
     }
-}
-
-func (root *RootCert) Clear () {
-    redisClear()
 }

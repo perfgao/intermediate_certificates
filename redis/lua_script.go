@@ -1,4 +1,4 @@
-package censys
+package redis
 
 const LUA_PUSH_SHA string = `
 local handled_set = KEYS[1]

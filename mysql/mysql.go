@@ -1,4 +1,4 @@
-package censys
+package mysql
 
 import (
     "github.com/astaxie/beego/orm"
@@ -26,7 +26,7 @@ func Sqlinit(conf config.Sqlconfig) {
                     sqlPort + ")/" + sqlDB + "?charset=utf8&parseTime=true"
     //orm.Debug = true
     orm.RegisterDataBase(aliasName, diverName, db_conn_str, 30)
-    orm.RegisterModel(new(certificateRecord))
+    orm.RegisterModel(new(CertificateRecord))
     orm.RunSyncdb(aliasName, false, true)
 
     dbconn := orm.NewOrm()
@@ -37,7 +37,7 @@ func Sqlinit(conf config.Sqlconfig) {
 }
 
 
-type certificateRecord struct {
+type CertificateRecord struct {
     Id int `pk:"auto"`
     Raw string `orm:"type(text)"`
     Type string `orm:"size(16);index;null"`
@@ -58,7 +58,7 @@ type certificateRecord struct {
     Pathlen int `orm:"default(0)"`
 }
 
-func insertIntoSql(info certificateRecord) error {
+func Insert(info CertificateRecord) error {
     orm:=orm.NewOrm()
     orm.Using(aliasName)
     _,err:=orm.InsertOrUpdate(&info)

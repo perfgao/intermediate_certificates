@@ -1,4 +1,4 @@
-package censys
+package redis
 
 import (
     redigo "github.com/garyburd/redigo/redis"
@@ -97,7 +97,7 @@ func ResetSha256(sha256 string) {
     glog.V(2).Infof("reset %s %s", sha256, res)
 }
 
-func redisClear() {
+func Clear() {
     conn := RedisPool.Get()
     defer conn.Close()
 
