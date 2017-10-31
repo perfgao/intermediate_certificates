@@ -5,8 +5,8 @@ import (
     "time"
     "encoding/json"
 
-    "perfgao/censys_io/censys"
-    "perfgao/censys_io/redis"
+    "github.com/perfgao/intermediate_certificates/censys"
+    "github.com/perfgao/intermediate_certificates/redis"
 )
 
 type RootCert struct {

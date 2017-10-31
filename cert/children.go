@@ -5,9 +5,9 @@ import (
     "time"
     "strings"
 
-    "perfgao/censys_io/censys"
-    "perfgao/censys_io/redis"
-    "perfgao/censys_io/mysql"
+    "github.com/perfgao/intermediate_certificates/censys"
+    "github.com/perfgao/intermediate_certificates/redis"
+    "github.com/perfgao/intermediate_certificates/mysql"
 )
 
 type ChildrenCert struct{

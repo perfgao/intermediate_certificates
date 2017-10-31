@@ -5,11 +5,11 @@ import (
     "flag"
     "log"
 
-    "perfgao/censys_io/config"
-    "perfgao/censys_io/mysql"
-    "perfgao/censys_io/redis"
-    "perfgao/censys_io/censys"
-    "perfgao/censys_io/cert"
+    "github.com/perfgao/intermediate_certificates/config"
+    "github.com/perfgao/intermediate_certificates/mysql"
+    "github.com/perfgao/intermediate_certificates/redis"
+    "github.com/perfgao/intermediate_certificates/censys"
+    "github.com/perfgao/intermediate_certificates/cert"
 )
 
 

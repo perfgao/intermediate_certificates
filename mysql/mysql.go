@@ -6,7 +6,7 @@ import (
     "time"
     "github.com/golang/glog"
 
-    "perfgao/censys_io/config"
+    "github.com/perfgao/intermediate_certificates/config"
 )
 
 const (

@@ -1,7 +1,7 @@
 package cert
 
 import (
-    "perfgao/censys_io/censys"
+    "github.com/perfgao/intermediate_certificates/censys"
 )
 
 const (

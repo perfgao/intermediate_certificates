@@ -9,7 +9,7 @@ import (
     "strings"
     "fmt"
 
-    "perfgao/censys_io/config"
+    "github.com/perfgao/intermediate_certificates/config"
 )
 
 

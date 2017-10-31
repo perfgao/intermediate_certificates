@@ -4,7 +4,7 @@ import (
     "encoding/json"
     "github.com/golang/glog"
 
-    "perfgao/utils/set"
+    "github.com/perfgao/go-utils/set"
 )
 
 /*
